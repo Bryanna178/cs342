@@ -21,6 +21,8 @@ public class Client implements Runnable, Serializable{
     private ObjectOutputStream cliOutput;
     private ObjectInputStream cliInput;
 
+    private SendingObj sndObj;
+
 
 
     //constructor
@@ -37,29 +39,19 @@ public class Client implements Runnable, Serializable{
         this.cliOutput = new ObjectOutputStream(this.socket.getOutputStream());          // input and output streams
         this.cliInput = new ObjectInputStream(this.socket.getInputStream());
         socket.setTcpNoDelay(true);
-    }
 
-    public Client(Client c1) throws IOException{
-        this.Name = c1.Name;
-        this.played = c1.played;
-        this.numPoints = c1.numPoints;
-        this.playAgain = c1.playAgain;
-        this.socket = c1.socket;
-        this.Played = c1.Played;
-        this.points = c1.points;
-
-        // added so that each Client obj has its own input and output stream
-        this.cliOutput = c1.cliOutput;
-        this.cliInput = c1.cliInput;
-        socket.setTcpNoDelay(true);
+        this.sndObj = new SendingObj();         // obj that will be sent to the server
     }
 
     // what a client gets from the server
     public synchronized void run(){
         try {
             while (true) {
-                Serializable data = (Serializable) cliInput.readObject();
-                System.out.println("from server"+data);
+                System.out.println("waiting for serv to send");
+                SendingObj data = (SendingObj) cliInput.readObject();
+                this.sndObj = data;
+                System.out.println("from server"+data.getMsg());
+                System.out.println("strikes... "+ data.getStrikes());
             }
         }catch(Exception e){
             e.printStackTrace();
@@ -96,4 +88,7 @@ public class Client implements Runnable, Serializable{
 
     public ObjectOutputStream getCliObjOut(){ return this.cliOutput;}
     public ObjectInputStream getCliInput(){ return this.cliInput;}
+
+    public SendingObj getSndObj(){ return this.sndObj;}
+    public  void setSndObj(SendingObj so){ this.sndObj = so;}
 }
