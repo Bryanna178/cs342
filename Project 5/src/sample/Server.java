@@ -16,14 +16,12 @@ public class Server implements Runnable{
     private int numClients;
     private Boolean isWinner;
     private String winner;
-    private Boolean serverStatus;
     private int portNum;
     private ServerSocket serverSocket;
     private Socket socket;
     private ArrayList<Client> clients;
     ObservableList<String> clientsConnected;
     ObservableList<String> played;
-    ObservableList<String> points;
     ObservableList<String> Winner;
 
     private ArrayList<CliThread> allCliConn;
@@ -35,12 +33,10 @@ public class Server implements Runnable{
         this.numClients = 0;
         this.isWinner = false;
         this.winner = " ";
-        this.serverStatus = false;
         this.portNum = port;
         this.clients = new ArrayList<>();
         this.clientsConnected = FXCollections.observableArrayList();
         this.played = FXCollections.observableArrayList();
-        this.points = FXCollections.observableArrayList();
         this.Winner = FXCollections.observableArrayList();
 
         this.allCliConn = new ArrayList<>();
@@ -82,9 +78,6 @@ public class Server implements Runnable{
     public void setWinner(String x){
         this.winner = x;
     }
-    public void setServerStatus(Boolean x){
-        this.serverStatus = x;
-    }
     public void setClients(ArrayList<Client> x){
         this.clients = x;
     }
@@ -98,9 +91,6 @@ public class Server implements Runnable{
     }
     public String getWinner(){
         return this.winner;
-    }
-    public Boolean getServerStatus(){
-        return this.serverStatus;
     }
     public int getPortNum(){
         return this.portNum;
@@ -159,7 +149,6 @@ public class Server implements Runnable{
                         @Override
                         public synchronized void run() {
                             played.add(num + ": " + data);
-                            points.add(num + ": " + cliPoints + " points");
                         }
                     });
                 }

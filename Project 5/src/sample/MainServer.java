@@ -97,34 +97,29 @@ public class MainServer extends Application {
         Label text1 = new Label("Clients Connected: ");
         text1.setFont(new Font("Cambria",20));
         text1.setTextFill(Color.rgb(0,255,150));
-        Label text2 = new Label("Played: ");
+
+        Label text2 = new Label("Words & Letters Guessed: ");
         text2.setFont(new Font("Cambria",20));
         text2.setTextFill(Color.rgb(0,255,150));
-        Label text3 = new Label("Points: ");
-        text3.setFont(new Font("Cambria",20));
-        text3.setTextFill(Color.rgb(0,255,150));
+
         Label text4 = new Label("Winner: ");
         text4.setFont(new Font("Cambria",20));
         text4.setTextFill(Color.rgb(0,255,150));
 
         ObservableList<String> clientsConnected = s.clientsConnected;
-        ListView<String> list = new ListView<>();
-        ObservableList<String> played = s.played;
         ListView<String> l1 = new ListView<>();
-        ObservableList<String> points = s.points;
+        ObservableList<String> played = s.played;
         ListView<String> l2 = new ListView<>();
         ObservableList<String> Winner = s.Winner;
         ListView<String> l3 = new ListView<>();
 
         pane.add(onOff, 0, 0);
         pane.add(text1,0,1);        //clients connected
-        pane.add(list,0,2);
+        pane.add(l1,0,2);
         pane.add(text2,0,3);        //what clients played
-        pane.add(l1,0,4);
-        pane.add(text3,0,5);        //clients points
-        pane.add(l2, 0, 6);
-        pane.add(text4, 0, 7);      //winner
-        pane.add(l3,0,8);
+        pane.add(l2,0,4);
+        pane.add(text4, 0, 5);      //winner
+        pane.add(l3,0,6);
 
         Thread thread = new Thread(s);
         thread.setDaemon(true);
@@ -145,12 +140,10 @@ public class MainServer extends Application {
             }
         });
 
-        list.setItems(clientsConnected);
-        list.setPrefHeight(50);
-        l1.setItems(played);
-        l1.setPrefHeight(50);
-        l2.setItems(points);
-        l2.setPrefHeight(50);
+        l1.setItems(clientsConnected);
+        l1.setPrefHeight(100);
+        l2.setItems(played);
+        l2.setPrefHeight(200);
         l3.setItems(Winner);
         l3.setPrefHeight(50);
 

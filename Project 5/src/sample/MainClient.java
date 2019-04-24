@@ -103,26 +103,25 @@ public class MainClient extends Application {
         gameOptions.getChildren().addAll(playAgain,quit);
         gameOptions.setSpacing(30);
 
+        Label t1 = new Label("Guess a Letter or a Word: ");
+        t1.setFont(new Font("Cambria",30));
+        t1.setTextFill(Color.rgb(0,255,150));
+
         Label t2 = new Label("Words & Letters Guessed: ");
         t2.setFont(new Font("Cambria",40));
         t2.setTextFill(Color.rgb(0,100,255));
 
-        Label t3 = new Label("Guess a Letter or a Word: ");
-        t3.setFont(new Font("Cambria",30));
-        t3.setTextFill(Color.rgb(0,255,150));
-
         ListView<String> list = new ListView<String>();
         ObservableList<String> played = FXCollections.observableArrayList();
-        ListView<String> l1 = new ListView<>();
+
+        TextField txt = new TextField();
 
         pane.add(t1,0,0);
-        pane.add(list, 0, 1);
+        pane.add(txt, 0, 1);
         pane.add(t2, 0, 2);
-        pane.add(l1,0,3);
-        pane.add(t3, 0, 4);
+        pane.add(list,0,3);
         pane.addRow(5,cliChoices);
         pane.addRow(6,gameOptions);
-
 
         playAgain.setOnAction((event) -> {
             //will need to handle the rematch stuff
@@ -133,9 +132,9 @@ public class MainClient extends Application {
             // and adjust to code... close stuff
         });
 
-        list.setPrefHeight(50);
-        l1.setItems(played);
-        l1.setPrefHeight(50);
+        txt.setPrefHeight(30);
+        list.setPrefHeight(250);
+        list.setItems(played);
 
         pane.setBackground(new Background(makeBackgroundImage("file:src/sample/space.jpg",400)));
 
