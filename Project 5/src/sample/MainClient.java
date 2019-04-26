@@ -100,6 +100,19 @@ public class MainClient extends Application {
         Button quit = new Button();
         quit.setGraphic(makePic("file:src/sample/exit.gif",80));
 
+        Images hm1 = new Images("hm1", "file:src/sample/HM01.JPG");
+        Images hm2 = new Images("hm2", "file:src/sample/HM02.JPG");
+        Images hm3 = new Images("hm3", "file:src/sample/HM03.JPG");
+        Images hm4 = new Images("hm4", "file:src/sample/HM04.JPG");
+        Images hm5 = new Images("hm5", "file:src/sample/HM05.JPG");
+        Images hm6 = new Images("hm6", "file:src/sample/HM06.JPG");
+        Images hm7 = new Images("hm7", "file:src/sample/HM07.JPG");
+        Images hm8 = new Images("hm8", "file:src/sample/HM08.JPG");
+        Images hm9 = new Images("hm9", "file:src/sample/HM09.JPG");
+        Images hm10 = new Images("hm10", "file:src/sample/HM010.JPG");
+        Images hm11 = new Images("hm11", "file:src/sample/HM011.JPG");
+        Images hm12 = new Images("hm12", "file:src/sample/HM012.JPG");
+
         gameOptions.getChildren().addAll(playAgain,quit);
         gameOptions.setSpacing(30);
 
