@@ -27,6 +27,14 @@ public class Server implements Runnable{
     private ArrayList<CliThread> allCliConn;
     private int totalCli;               // used to distinguish a client and server
 
+    // added for project 5
+    private int countdown;      // messing around with this
+    private ArrayList<String> wordsLst;
+    private String actualWord;          // in the case user wants to guess the whole word/phrase
+    private String takingApartWord;     // if guessing letter by letter
+    private boolean guessed = false;
+
+
     //constructor
     public Server(int port) throws IOException {
         // TODO Auto-generated constructor stub
@@ -41,6 +49,15 @@ public class Server implements Runnable{
 
         this.allCliConn = new ArrayList<>();
         this.totalCli = 0;
+
+        // pick the random word when the server is created****
+        wordsLst = new ArrayList<>();
+        wordsLst.add("yoyo");
+        this.actualWord = wordsLst.get(0);
+        this.takingApartWord = wordsLst.get(0);
+
+        System.out.println("word list made");
+
     }
 
     public synchronized void run(){
@@ -58,7 +75,16 @@ public class Server implements Runnable{
                 allCliConn.add(c1);     // adding client
                 c1.start();
 
-                clientsConnected.add("Client " + totalCli + " connected");
+                //added
+                allCliConn.add(c1);
+                // placed on a Platform.runLater to fix the exception
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public synchronized void run() {
+                        clientsConnected.add("Client " + c1.getCliNum() + " connected");
+                    }
+                });
+
                 totalCli++;     // add to the total clients in server
             }
         }
@@ -111,6 +137,9 @@ public class Server implements Runnable{
         int num;
         int cliPoints;
 
+        //added the sending object into the client thread
+        SendingObj cliObj;      // contains points and what is being sent over to the server
+
         ObjectOutputStream cliOutput;
         ObjectInputStream cliInput;
 
@@ -119,6 +148,9 @@ public class Server implements Runnable{
             this.cliSocket = s;
             this.num = num;
             this.cliPoints = 0;
+
+            //added
+            this.cliObj = new SendingObj();
         }
 
         // getters for the client stuff
@@ -141,14 +173,85 @@ public class Server implements Runnable{
                 // ready to enter the infinite loop where the server will be waiting for any client to send something over
                 // (we need it to pass through the client object over)
                 while(true){
-                    // this is for a test for when what is sent over is a string
-                    Serializable data = (Serializable) in.readObject();
-                    System.out.println("rcvd "+data + " from " + this.num);
+                    //added
+
+                    // the sendingObj comes in from a client and the server deals with it here
+                    //---------------------------------------------------------------------------------------------- PROJECT 5
+                    SendingObj data = (SendingObj) in.readObject();
+                    System.out.println("rcvd " + data.getMsg() + " from " + data.getName() + " player number " + this.num);
+
+                    if(!guessed){
+
+                        //------------------------------------------------------------------------------------------- neeed to fix this...
+                        // checking the string if the guess is in it            // indexOf return non -1 if exists
+                        // check for more of the same char in word...
+//                        while(takingApartWord.indexOf(data.getMsg().charAt(0)) != -1){
+//                            data.setMsg("good guess");
+//                            data.setPosOfGuess(takingApartWord.indexOf(data.getMsg().charAt(0)));   // sends the index of the char in word
+//                            out.writeObject(data);
+//
+//                            //spits up the word
+//                            String[] parts = takingApartWord.split(data.getMsg(),1);    // lim is how many splits
+//                            //put word back together after taking out the first occurance of the letter
+//                            takingApartWord = "";
+//                            for(String s: parts){
+//                                takingApartWord = takingApartWord + s;
+//                            }
+//                            System.out.println("new word "+ takingApartWord);
+//                        }
+                        //-----------------------------------------------------------------------------------------
+
+
+                        // if what the client sends is the correct thing... then they won
+                        if(data.getMsg().equals(actualWord)){
+                            System.out.println("WINNERRRR");
+                            data.setMsg("YOU WON");
+                            out.writeObject(data);      // send updated msg to client
+
+                            Winner.add("WINNER IS PLAYER "+ data.getName());
+
+                            // then send to everyone in the server that there is a winner
+                            SendingObj losingMsg = new SendingObj();
+                            losingMsg.setMsg("LOSER");
+                            // send out msg to losers
+                            for(CliThread ct: allCliConn){
+                                if(ct.num != this.num){
+                                    ct.getCliObjOut().writeObject(losingMsg);
+                                }
+                            }
+                        }
+                        // else it is not correct so keep trying
+                        else{
+                            System.out.println("try again");
+                            data.setMsg("try again");
+
+                            //mark strike if it is incorrect guess
+                            data.setStrikes(data.getStrikes() + 1);
+                            out.writeObject(data);
+                        }
+                    }
+
+
+
+                    //---------------------------------------------------------------------------------------------     PROJECT 5
+
+                    // probably move this up... where the data comes in
+                    cliObj = data;      // reset the client object that pertains to this client thread...
+                    System.out.println("new client "+ this.num + " obj "+ cliObj.getStrikes() +" stikes "+ cliObj.getMsg() + " msg, won: "+ cliObj.getWinStatus());
+
+//                    // get what the client sent and send it to all clients on server...           // USE THIS IDEA TO CHECK FOR A WINNER
+//                    for(CliThread ct: allCliConn){
+//                        out.writeObject("get go " + data + " from someone ");
+//                    }
+
 
                     Platform.runLater(new Runnable() {
                         @Override
                         public synchronized void run() {
-                            played.add(num + ": " + data);
+                            played.add(data.getName() + " " + num + ": " + data.getMsg());
+
+                            //displays points... may not be needed on server end
+                            //points.add(data.getName() + ": " + cliObj.getStrikes() + " points");            // MAYBE MAKE data INTO cliObj FROM THE GET GO
                         }
                     });
                 }

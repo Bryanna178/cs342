@@ -28,6 +28,11 @@ public class MainClient extends Application {
     private VBox cliOpeningOptions = new VBox();            // will store all the text boxes and the labels
     private HBox cliChoices = new HBox();                   // holds the clients choices to shoot
     private HBox gameOptions = new HBox();
+    private Button sendGuess = new Button("Guess!");
+
+    private SendingObj guiSendobj = new SendingObj();
+    private ArrayList<Images> imagesArray = new ArrayList<>();
+    private Button gameStatus = new Button();
 
     public static void main(String[] args) {
         launch(args);
@@ -76,6 +81,11 @@ public class MainClient extends Application {
                 try{
                     Client client = new Client(textField1.getText(), textField2.getText(), Integer.parseInt(textField3.getText()));
 
+                    //needed to get connection
+                    Thread thread = new Thread(client);
+                    thread.setDaemon(true);                         //sets current thread as a Daemon thread (else its a user thread)
+                    thread.start();
+
                     secondaryStage.hide();
                     secondaryStage.setScene(ClientGUI(client));
                     secondaryStage.show();
@@ -96,9 +106,9 @@ public class MainClient extends Application {
 
         //buttons to choose to play again or quit
         Button playAgain = new Button();
-        playAgain.setGraphic(makePic("file:src/sample/replay.jpg",80));
+        playAgain.setGraphic(makePic(new Images("replay","file:src/sample/replay.jpg").getImage(),80));
         Button quit = new Button();
-        quit.setGraphic(makePic("file:src/sample/exit.gif",80));
+        quit.setGraphic(makePic(new Images("quit","file:src/sample/exit.gif").getImage(),80));
 
         Images hm1 = new Images("hm1", "file:src/sample/HM01.JPG");
         Images hm2 = new Images("hm2", "file:src/sample/HM02.JPG");
@@ -112,6 +122,19 @@ public class MainClient extends Application {
         Images hm10 = new Images("hm10", "file:src/sample/HM010.JPG");
         Images hm11 = new Images("hm11", "file:src/sample/HM011.JPG");
         Images hm12 = new Images("hm12", "file:src/sample/HM012.JPG");
+
+        imagesArray.add(hm1);
+        imagesArray.add(hm2);
+        imagesArray.add(hm3);
+        imagesArray.add(hm4);
+        imagesArray.add(hm5);
+        imagesArray.add(hm6);
+        imagesArray.add(hm7);
+        imagesArray.add(hm8);
+        imagesArray.add(hm9);
+        imagesArray.add(hm10);
+        imagesArray.add(hm11);
+        imagesArray.add(hm12);
 
         gameOptions.getChildren().addAll(playAgain,quit);
         gameOptions.setSpacing(30);
@@ -127,13 +150,15 @@ public class MainClient extends Application {
         ListView<String> list = new ListView<String>();
         ObservableList<String> played = FXCollections.observableArrayList();
 
-        TextField txt = new TextField();
+        TextField guessBox = new TextField();
 
         pane.add(t1,0,0);
-        pane.add(txt, 0, 1);
+        pane.add(guessBox, 0, 1);
+        pane.add(sendGuess,1,1);
         pane.add(t2, 0, 2);
         pane.add(list,0,3);
-        pane.addRow(5,cliChoices);
+        pane.add(gameStatus,5,3);
+//        pane.addRow(5,cliChoices);        // taken out not in use
         pane.addRow(6,gameOptions);
 
         playAgain.setOnAction((event) -> {
@@ -145,7 +170,38 @@ public class MainClient extends Application {
             // and adjust to code... close stuff
         });
 
-        txt.setPrefHeight(30);
+        sendGuess.setOnAction((event) ->{
+            makeGuess(guessBox.getText(),played,s);
+            try {
+                SendingObj data = (SendingObj) s.getCliInput().readObject();
+                this.guiSendobj = data;
+                System.out.println("from server on gui " + data.getMsg() + " strikes "+ data.getStrikes());
+                if(data.getStrikes() <= 12){
+                    // not a good guess
+                    if(data.getMsg().equals("try again")) {
+                        setHangmanImage(data.getStrikes(), imagesArray);
+                    }
+
+                    // good guess
+                    else if(data.getMsg().equals("good guess")){
+                        // have the position of the char... so display it!
+                        System.out.println("pos of letter is " + data.getPosOfGuess());
+
+                    }
+
+                    else if(data.getMsg().equals("loser")){
+                        System.out.println(data.getMsg());
+                    }
+                }
+                else{
+                    // done at this point can no longer play...
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        });
+
+        guessBox.setPrefHeight(30);
         list.setPrefHeight(250);
         list.setItems(played);
 
@@ -171,8 +227,7 @@ public class MainClient extends Application {
     }
 
     // helps make an imageview to set image for buttons
-    public ImageView makePic(String filename,int hNw){
-        Image pic = new Image(filename);
+    public ImageView makePic(Image pic,int hNw){
         ImageView v = new ImageView(pic);
         v.setFitHeight(hNw);
         v.setFitWidth(hNw);
@@ -180,20 +235,25 @@ public class MainClient extends Application {
         return v;
     }
 
-    public synchronized void makePlay(String c, ObservableList<String> played, Client s){
-        try {
-            Client c2 = new Client(s);
-            played.clear();
-            played.add(c);
-            s.setPlayed(c);
+    public void makeGuess(String s, ObservableList<String> played, Client c){
+        try{
+            // tell the client what guesses were made was made
+            played.add(s);
 
-            //s.getCliObjOut().writeObject(s.getPlayed());
-            s.getCliObjOut().writeObject(s.getPlayed());
-            s.getCliObjOut().flush();
-            System.out.println("sent " + s.getPlayed());
-        } catch (IOException e) {
+            // this allows for the gui sending obj to update and display
+            this.guiSendobj.setMsg(s);
+            c.getCliObjOut().writeObject(this.guiSendobj);
+            c.getCliObjOut().flush();
+            System.out.println("sent " + this.guiSendobj.getMsg());
+
+        }catch(Exception e){
             e.printStackTrace();
         }
+    }
+
+    // takes in the message from the server and displays image of where the player is at
+    public void setHangmanImage(int strikeNum, ArrayList<Images> picArray){
+        gameStatus.setGraphic(makePic(picArray.get(strikeNum).getImage(),300));
     }
 
 }
