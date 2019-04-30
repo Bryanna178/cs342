@@ -200,6 +200,14 @@ public class MainClient extends Application {
                 e.printStackTrace();
             }
         });
+        // will get what the server sends when the client is created...         allows us to get the length of the word being used
+        try{
+            guiSendobj = (SendingObj)s.getCliInput().readObject();
+            played.add("total letters in word "+ guiSendobj.getWordLen());
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
 
         guessBox.setPrefHeight(30);
         list.setPrefHeight(250);

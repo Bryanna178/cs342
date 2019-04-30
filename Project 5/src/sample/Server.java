@@ -34,6 +34,10 @@ public class Server implements Runnable{
     private String takingApartWord;     // if guessing letter by letter
     private boolean guessed = false;
 
+    //added 4/29/19
+    private char[] wordInParts;
+    private int remainingLetters;
+
 
     //constructor
     public Server(int port) throws IOException {
@@ -55,6 +59,10 @@ public class Server implements Runnable{
         wordsLst.add("yoyo");
         this.actualWord = wordsLst.get(0);
         this.takingApartWord = wordsLst.get(0);
+
+        //added
+        wordInParts = this.actualWord.toCharArray();
+        this.remainingLetters = actualWord.length();
 
         System.out.println("word list made");
 
@@ -169,6 +177,9 @@ public class Server implements Runnable{
 
                 this.cliOutput = out;
                 this.cliInput = in;
+
+                cliObj.setWordLen(actualWord.length());
+                out.writeObject(cliObj);
 
                 // ready to enter the infinite loop where the server will be waiting for any client to send something over
                 // (we need it to pass through the client object over)
