@@ -81,7 +81,7 @@ public class Client implements Runnable, Serializable{
 //                System.out.println("waiting for serv to send");
 //                SendingObj data = (SendingObj) cliInput.readObject();
 //                this.sndObj = data;
-//                System.out.println("from server"+data.getMsg());
+//                System.out.println("from server "+data.getMsg() + "word len "+ data.getWordLen());
 //                System.out.println("strikes... "+ data.getStrikes());
 //                if(data.getMsg().equals("try again")){
 //                    setHangmanImage(data.getStrikes(),imagesArray);
