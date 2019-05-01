@@ -31,7 +31,7 @@ public class Server implements Runnable{
     private int countdown;      // messing around with this
     private ArrayList<String> wordsLst;
     private String actualWord;          // in the case user wants to guess the whole word/phrase
-    private String takingApartWord;     // if guessing letter by letter
+    private ArrayList<Character> lettersSoFar;
     private boolean guessed = false;
 
     //added 4/29/19
@@ -58,13 +58,20 @@ public class Server implements Runnable{
         wordsLst = new ArrayList<>();
         wordsLst.add("yoyo");
         this.actualWord = wordsLst.get(0);
-        this.takingApartWord = wordsLst.get(0);
 
         //added
         wordInParts = this.actualWord.toCharArray();
         this.remainingLetters = actualWord.length();
+        this.lettersSoFar = new ArrayList<Character>();      // char array that is of the length of the word...
+        for(int i = 0; i < remainingLetters; i++){
+            lettersSoFar.add('_');
+        }
+        System.out.println("inside word arr ");
+        for(char c: lettersSoFar){
+            System.out.println(c);
+        }
 
-        System.out.println("word list made");
+        System.out.println("word list made... letters so far len "+ lettersSoFar.size());
 
     }
 
@@ -192,27 +199,6 @@ public class Server implements Runnable{
                     System.out.println("rcvd " + data.getMsg() + " from " + data.getName() + " player number " + this.num);
 
                     if(!guessed){
-
-                        //------------------------------------------------------------------------------------------- neeed to fix this...
-                        // checking the string if the guess is in it            // indexOf return non -1 if exists
-                        // check for more of the same char in word...
-//                        while(takingApartWord.indexOf(data.getMsg().charAt(0)) != -1){
-//                            data.setMsg("good guess");
-//                            data.setPosOfGuess(takingApartWord.indexOf(data.getMsg().charAt(0)));   // sends the index of the char in word
-//                            out.writeObject(data);
-//
-//                            //spits up the word
-//                            String[] parts = takingApartWord.split(data.getMsg(),1);    // lim is how many splits
-//                            //put word back together after taking out the first occurance of the letter
-//                            takingApartWord = "";
-//                            for(String s: parts){
-//                                takingApartWord = takingApartWord + s;
-//                            }
-//                            System.out.println("new word "+ takingApartWord);
-//                        }
-                        //-----------------------------------------------------------------------------------------
-
-
                         // if what the client sends is the correct thing... then they won
                         if(data.getMsg().equals(actualWord)){
                             System.out.println("WINNERRRR");
@@ -233,12 +219,54 @@ public class Server implements Runnable{
                         }
                         // else it is not correct so keep trying
                         else{
-                            System.out.println("try again");
-                            data.setMsg("try again");
+                            int counter = 0;
+                            char userGuess = data.getMsg().charAt(0);
+                            for(char c: wordInParts){
+                                System.out.println("char from word... "+c);
+                                if(c == userGuess){
+                                    System.out.println("correct letter");
+                                    data.setMsg("good guess");
+                                    data.addPosOfGuess(counter);
+                                    lettersSoFar.remove(counter);        // adds the letter in the spot it belongs
+                                    lettersSoFar.add(counter,c);
+                                    remainingLetters--;                 // take away the remaining letters
+                                    out.writeObject(data);
+                                }
+                                counter++;
+                            }
+                            System.out.println("curr");
+                            for(char c: lettersSoFar){
+                                System.out.print(c);
+                            }
 
-                            //mark strike if it is incorrect guess
-                            data.setStrikes(data.getStrikes() + 1);
-                            out.writeObject(data);
+                            // check if the word was solved for
+                            if(remainingLetters == 0){
+                                System.out.println("WINNERRRR");                                    // MAKE INTO A FUNCTION
+                                data.setMsg("YOU WON");
+                                out.writeObject(data);      // send updated msg to client
+
+                                Winner.add("WINNER IS PLAYER "+ data.getName());
+
+                                // then send to everyone in the server that there is a winner
+                                SendingObj losingMsg = new SendingObj();
+                                losingMsg.setMsg("LOSER");
+                                // send out msg to losers
+                                for(CliThread ct: allCliConn){
+                                    if(ct.num != this.num){
+                                        ct.getCliObjOut().writeObject(losingMsg);
+                                    }
+                                }
+                            }
+
+                            // if no letter was guessed correctly
+                            else if(!data.getMsg().equals("good guess")){
+                                System.out.println("try again");
+                                data.setMsg("try again");
+
+                                //mark strike if it is incorrect guess
+                                data.setStrikes(data.getStrikes() + 1);
+                                out.writeObject(data);
+                            }
                         }
                     }
 

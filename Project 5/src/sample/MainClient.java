@@ -185,7 +185,9 @@ public class MainClient extends Application {
                     // good guess
                     else if(data.getMsg().equals("good guess")){
                         // have the position of the char... so display it!
-                        System.out.println("pos of letter is " + data.getPosOfGuess());
+                        for(int i: data.getPosOfGuess()){
+                            System.out.println("pos of letter is " + i);
+                        }
 
                     }
 
@@ -204,7 +206,6 @@ public class MainClient extends Application {
         try{
             guiSendobj = (SendingObj)s.getCliInput().readObject();
             played.add("total letters in word "+ guiSendobj.getWordLen());
-
         }catch(Exception e){
             e.printStackTrace();
         }
