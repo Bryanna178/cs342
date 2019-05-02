@@ -14,14 +14,17 @@ public class SendingObj implements Serializable {
 //    private int posOfGuess;                 // tells the user where in the string the char is found
     private int wordLen;                    // lets the user know how long the word is
 
+    private ArrayList<Character> guessedSoFar;      // allows the users to know how much of the word has been guessed
+
     // default const
     SendingObj(){
         this.msg = "";
         this.strikes = 0;
         this.win = false;
         this.game = false;
-        this.posOfGuess = new ArrayList<>();
+        this.posOfGuess = new ArrayList<Integer>();
         this.wordLen = -1;
+        this.guessedSoFar = new ArrayList<Character>();
     }
 
     SendingObj(SendingObj so2){
@@ -31,6 +34,7 @@ public class SendingObj implements Serializable {
         this.game = so2.game;
         this.posOfGuess = so2.posOfGuess;
         this.wordLen = so2.wordLen;
+        this.guessedSoFar = so2.guessedSoFar;
     }
 
     public void setMsg(String m){ this.msg = m;}
@@ -53,5 +57,8 @@ public class SendingObj implements Serializable {
 
     public void setWordLen(int len){ this.wordLen = len;}
     public int getWordLen(){ return this.wordLen;}
+
+    public void setGuessedSoFar(ArrayList<Character> letterArr){ this.guessedSoFar = letterArr;}
+    public ArrayList<Character> getGuessedSoFar(){ return this.guessedSoFar;}
 
 }

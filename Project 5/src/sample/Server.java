@@ -31,7 +31,7 @@ public class Server implements Runnable{
     private int countdown;      // messing around with this
     private ArrayList<String> wordsLst;
     private String actualWord;          // in the case user wants to guess the whole word/phrase
-    private ArrayList<Character> lettersSoFar;
+    private ArrayList<Character> lettersSoFar;          // stores the words that have been guessed so far
     private boolean guessed = false;
 
     //added 4/29/19
@@ -186,6 +186,7 @@ public class Server implements Runnable{
                 this.cliInput = in;
 
                 cliObj.setWordLen(actualWord.length());
+                cliObj.setGuessedSoFar(lettersSoFar);
                 out.writeObject(cliObj);
 
                 // ready to enter the infinite loop where the server will be waiting for any client to send something over
@@ -201,21 +202,22 @@ public class Server implements Runnable{
                     if(!guessed){
                         // if what the client sends is the correct thing... then they won
                         if(data.getMsg().equals(actualWord)){
-                            System.out.println("WINNERRRR");
-                            data.setMsg("YOU WON");
-                            out.writeObject(data);      // send updated msg to client
-
-                            Winner.add("WINNER IS PLAYER "+ data.getName());
-
-                            // then send to everyone in the server that there is a winner
-                            SendingObj losingMsg = new SendingObj();
-                            losingMsg.setMsg("LOSER");
-                            // send out msg to losers
-                            for(CliThread ct: allCliConn){
-                                if(ct.num != this.num){
-                                    ct.getCliObjOut().writeObject(losingMsg);
-                                }
-                            }
+                            sendWinnerNotice(data,out);
+//                            System.out.println("WINNERRRR");
+//                            data.setMsg("YOU WON");
+//                            out.writeObject(data);      // send updated msg to client
+//
+//                            Winner.add("WINNER IS PLAYER "+ data.getName());
+//
+//                            // then send to everyone in the server that there is a winner
+//                            SendingObj losingMsg = new SendingObj();
+//                            losingMsg.setMsg("LOSER");
+//                            // send out msg to losers
+//                            for(CliThread ct: allCliConn){
+//                                if(ct.num != this.num){
+//                                    ct.getCliObjOut().writeObject(losingMsg);
+//                                }
+//                            }
                         }
                         // else it is not correct so keep trying
                         else{
@@ -230,10 +232,11 @@ public class Server implements Runnable{
                                     lettersSoFar.remove(counter);        // adds the letter in the spot it belongs
                                     lettersSoFar.add(counter,c);
                                     remainingLetters--;                 // take away the remaining letters
-                                    out.writeObject(data);
+//                                    out.writeObject(data);
                                 }
                                 counter++;
                             }
+
                             System.out.println("curr");
                             for(char c: lettersSoFar){
                                 System.out.print(c);
@@ -241,21 +244,20 @@ public class Server implements Runnable{
 
                             // check if the word was solved for
                             if(remainingLetters == 0){
-                                System.out.println("WINNERRRR");                                    // MAKE INTO A FUNCTION
-                                data.setMsg("YOU WON");
-                                out.writeObject(data);      // send updated msg to client
-
-                                Winner.add("WINNER IS PLAYER "+ data.getName());
-
-                                // then send to everyone in the server that there is a winner
-                                SendingObj losingMsg = new SendingObj();
-                                losingMsg.setMsg("LOSER");
-                                // send out msg to losers
-                                for(CliThread ct: allCliConn){
-                                    if(ct.num != this.num){
-                                        ct.getCliObjOut().writeObject(losingMsg);
-                                    }
+                                data.getGuessedSoFar().clear();
+                                for(char c: lettersSoFar){
+                                    data.getGuessedSoFar().add(c);
                                 }
+                                sendWinnerNotice(data,out);
+                            }
+
+                            // if positions were found and still no winner send the obj
+                            if(data.getPosOfGuess().size() > 0 && !guessed){
+                                data.getGuessedSoFar().clear();
+                                for(char c: lettersSoFar){
+                                    data.getGuessedSoFar().add(c);
+                                }
+                                out.writeObject(data);
                             }
 
                             // if no letter was guessed correctly
@@ -299,5 +301,34 @@ public class Server implements Runnable{
                 System.out.println("some error inside cli thread");
             }
         }
+
+        // need to somehow send over the status of the word to all the clients on the server...********************************************
+        public void sendWinnerNotice(SendingObj data,ObjectOutputStream out){
+            try{
+                guessed = true;
+                System.out.println(" WINNERRRR");                                    // MAKE INTO A FUNCTION
+                data.setMsg("YOU WON");
+                out.writeObject(data);      // send updated msg to client
+
+                Winner.add("WINNER IS PLAYER "+ data.getName());
+
+                // then send to everyone in the server that there is a winner
+                SendingObj losingMsg = new SendingObj();
+                losingMsg.setMsg("LOSER");
+                // send out msg to losers
+                for(CliThread ct: allCliConn){
+                    if(ct.num != this.num){
+                        ct.getCliObjOut().writeObject(losingMsg);
+                    }
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        public void sendCurrWord(ArrayList<Character> charArr){         // FINISH!!!!!!!!!
+
+        }
+
     }
 }
