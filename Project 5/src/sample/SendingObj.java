@@ -1,6 +1,7 @@
 package sample;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class SendingObj implements Serializable {
 
@@ -9,8 +10,11 @@ public class SendingObj implements Serializable {
     private boolean win;                    // used to identify the winner
     private boolean game = false;           // allows for player to still send guesses (is the game still on? has someone already guessed the word?)
     private String name;
-    private int posOfGuess;                 // tells the user where in the string the char is found
+    private ArrayList<Integer> posOfGuess;
+//    private int posOfGuess;                 // tells the user where in the string the char is found
     private int wordLen;                    // lets the user know how long the word is
+
+    private ArrayList<Character> guessedSoFar;      // allows the users to know how much of the word has been guessed
 
     // default const
     SendingObj(){
@@ -18,8 +22,9 @@ public class SendingObj implements Serializable {
         this.strikes = 0;
         this.win = false;
         this.game = false;
-        this.posOfGuess = -1;
+        this.posOfGuess = new ArrayList<Integer>();
         this.wordLen = -1;
+        this.guessedSoFar = new ArrayList<Character>();
     }
 
     SendingObj(SendingObj so2){
@@ -29,6 +34,7 @@ public class SendingObj implements Serializable {
         this.game = so2.game;
         this.posOfGuess = so2.posOfGuess;
         this.wordLen = so2.wordLen;
+        this.guessedSoFar = so2.guessedSoFar;
     }
 
     public void setMsg(String m){ this.msg = m;}
@@ -46,10 +52,13 @@ public class SendingObj implements Serializable {
     public void setName(String s){ this.name = s;}
     public String getName(){ return this.name;}
 
-    public void setPosOfGuess(int pos){ this.posOfGuess = pos;}
-    public int getPosOfGuess(){ return this.posOfGuess;}
+    public void addPosOfGuess(int pos){ this.posOfGuess.add(pos); }
+    public ArrayList<Integer> getPosOfGuess(){ return this.posOfGuess;}
 
     public void setWordLen(int len){ this.wordLen = len;}
     public int getWordLen(){ return this.wordLen;}
+
+    public void setGuessedSoFar(ArrayList<Character> letterArr){ this.guessedSoFar = letterArr;}
+    public ArrayList<Character> getGuessedSoFar(){ return this.guessedSoFar;}
 
 }

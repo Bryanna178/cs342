@@ -33,6 +33,7 @@ public class MainClient extends Application {
     private SendingObj guiSendobj = new SendingObj();
     private ArrayList<Images> imagesArray = new ArrayList<>();
     private Button gameStatus = new Button();
+    private TextField wordStatus = new TextField("word here");
 
     public static void main(String[] args) {
         launch(args);
@@ -147,6 +148,10 @@ public class MainClient extends Application {
         t2.setFont(new Font("Cambria",40));
         t2.setTextFill(Color.rgb(0,100,255));
 
+        Label t3 = new Label("Guessed so far");
+        t3.setFont(new Font("Cambria",40));
+        t3.setTextFill(Color.rgb(255,0,100));
+
         ListView<String> list = new ListView<String>();
         ObservableList<String> played = FXCollections.observableArrayList();
 
@@ -159,10 +164,13 @@ public class MainClient extends Application {
         pane.add(list,0,3);
         pane.add(gameStatus,5,3);
 //        pane.addRow(5,cliChoices);        // taken out not in use
+        pane.add(t3,0,4);               // move around...
+        pane.add(wordStatus,0,5);
         pane.addRow(6,gameOptions);
 
         playAgain.setOnAction((event) -> {
             //will need to handle the rematch stuff
+            //need to call getRandWord() to get a new word for a new game
         });
 
         quit.setOnAction((event) -> {
@@ -177,24 +185,40 @@ public class MainClient extends Application {
                 this.guiSendobj = data;
                 System.out.println("from server on gui " + data.getMsg() + " strikes "+ data.getStrikes());
                 if(data.getStrikes() <= 12){
-                    // not a good guess
+                    // not a good guess so set a strike and display picture
                     if(data.getMsg().equals("try again")) {
                         setHangmanImage(data.getStrikes(), imagesArray);
                     }
 
-                    // good guess
+                    // good guess, get position(s) of guessed letter
                     else if(data.getMsg().equals("good guess")){
                         // have the position of the char... so display it!
-                        System.out.println("pos of letter is " + data.getPosOfGuess());
+//                        for(int i: data.getPosOfGuess()){
+//                            System.out.println("pos of letter is " + i);
+//                        }
+                        wordStatus.clear();
+                        wordStatus.setText(data.getGuessedSoFar().toString());
+                        data.getPosOfGuess().clear();               // once the positions have been used clear it for the next adds
 
                     }
 
-                    else if(data.getMsg().equals("loser")){
+                    // player lost game
+                    else if(data.getMsg().equals("LOSER")){
+                        System.out.println(data.getMsg());
+                    }
+
+                    // play won game
+                    else if(data.getMsg().equals("YOU WON")){
+                        wordStatus.clear();
+                        wordStatus.setText(data.getGuessedSoFar().toString());
                         System.out.println(data.getMsg());
                     }
                 }
                 else{
                     // done at this point can no longer play...
+                    sendGuess.setDisable(true);         // disable sending button till there is a winner
+                    System.out.println("LOSER WAIT");
+                    // still update the loser players stuff
                 }
             }catch(Exception e){
                 e.printStackTrace();
@@ -203,8 +227,9 @@ public class MainClient extends Application {
         // will get what the server sends when the client is created...         allows us to get the length of the word being used
         try{
             guiSendobj = (SendingObj)s.getCliInput().readObject();
-            played.add("total letters in word "+ guiSendobj.getWordLen());
-
+            played.add("Total letters in word: "+ guiSendobj.getWordLen());
+            wordStatus.clear();
+            wordStatus.setText(guiSendobj.getGuessedSoFar().toString());       // COME BACK HEREEEEE
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -265,3 +290,9 @@ public class MainClient extends Application {
     }
 
 }
+
+
+
+// **************** need to create a space for the current state of the word... needs to be sent from the server so that everyone has the updated version************
+// this space will also display if the player is a winner or not??? na have an additional space so that the users can see the whole word and the end game message (winner/ loser)
+// preguntale a la bryanna
