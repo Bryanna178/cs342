@@ -58,7 +58,12 @@ public class SendingObj implements Serializable {
     public void setWordLen(int len){ this.wordLen = len;}
     public int getWordLen(){ return this.wordLen;}
 
-    public void setGuessedSoFar(ArrayList<Character> letterArr){ this.guessedSoFar = letterArr;}
+    public void setGuessedSoFar(ArrayList<Character> letterArr){
+        this.guessedSoFar.clear();
+        for(char c: letterArr){
+            this.guessedSoFar.add(c);
+        }
+    }
     public ArrayList<Character> getGuessedSoFar(){ return this.guessedSoFar;}
 
 }
