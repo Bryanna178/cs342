@@ -33,7 +33,9 @@ public class MainClient extends Application {
     private SendingObj guiSendobj = new SendingObj();
     private ArrayList<Images> imagesArray = new ArrayList<>();
     private Button gameStatus = new Button();
-    private TextField wordStatus = new TextField("word here");
+    private TextField wordStatus = new TextField();
+
+    private Button update = new Button("update");
 
     public static void main(String[] args) {
         launch(args);
@@ -120,9 +122,9 @@ public class MainClient extends Application {
         Images hm7 = new Images("hm7", "file:src/sample/HM07.JPG");
         Images hm8 = new Images("hm8", "file:src/sample/HM08.JPG");
         Images hm9 = new Images("hm9", "file:src/sample/HM09.JPG");
-        Images hm10 = new Images("hm10", "file:src/sample/HM010.JPG");
-        Images hm11 = new Images("hm11", "file:src/sample/HM011.JPG");
-        Images hm12 = new Images("hm12", "file:src/sample/HM012.JPG");
+        Images hm10 = new Images("hm10", "file:src/sample/HM10.JPG");
+        Images hm11 = new Images("hm11", "file:src/sample/HM11.JPG");
+        Images hm12 = new Images("hm12", "file:src/sample/HM12.JPG");
 
         imagesArray.add(hm1);
         imagesArray.add(hm2);
@@ -139,6 +141,7 @@ public class MainClient extends Application {
 
         gameOptions.getChildren().addAll(playAgain,quit);
         gameOptions.setSpacing(30);
+        gameStatus.setGraphic(makePic(imagesArray.get(0).getImage(),300));
 
         Label t1 = new Label("Guess a Letter or a Word: ");
         t1.setFont(new Font("Cambria",30));
@@ -160,11 +163,11 @@ public class MainClient extends Application {
         pane.add(t1,0,0);
         pane.add(guessBox, 0, 1);
         pane.add(sendGuess,1,1);
+        pane.add(update,4,1);               // move around...
         pane.add(t2, 0, 2);
         pane.add(list,0,3);
         pane.add(gameStatus,5,3);
-//        pane.addRow(5,cliChoices);        // taken out not in use
-        pane.add(t3,0,4);               // move around...
+        pane.add(t3,0,4);
         pane.add(wordStatus,0,5);
         pane.addRow(6,gameOptions);
 
@@ -176,6 +179,11 @@ public class MainClient extends Application {
         quit.setOnAction((event) -> {
             System.exit(-1);        // will need to change this
             // and adjust to code... close stuff
+        });
+
+        update.setOnAction((event) ->{
+            requestUpdate(s);
+            getUpdate(s);
         });
 
         sendGuess.setOnAction((event) ->{
@@ -286,7 +294,33 @@ public class MainClient extends Application {
 
     // takes in the message from the server and displays image of where the player is at
     public void setHangmanImage(int strikeNum, ArrayList<Images> picArray){
-        gameStatus.setGraphic(makePic(picArray.get(strikeNum).getImage(),300));
+        gameStatus.setGraphic(makePic(picArray.get(strikeNum).getImage(),250));
+    }
+
+    public void requestUpdate(Client c){
+        try{
+            this.guiSendobj.setMsg("update");
+            c.getCliObjOut().writeObject(this.guiSendobj);
+            c.getCliObjOut().flush();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void getUpdate(Client c){
+        try{
+            SendingObj data = (SendingObj) c.getCliInput().readObject();
+            this.guiSendobj = data;
+            System.out.println("got update*********" + data.getMsg());
+//            for(char s: data.getGuessedSoFar()){
+//                System.out.print(s);
+//            }
+            wordStatus.clear();
+            wordStatus.setText(data.getGuessedSoFar().toString());
+
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
 }

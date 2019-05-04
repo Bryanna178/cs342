@@ -194,7 +194,7 @@ public class Server implements Runnable{
         public ObjectInputStream getCliInput(){ return this.cliInput;}
 
         // whats going to run when the server receives something from any client
-        public void run(){
+        public synchronized void run(){                                                 // was made synched...****
             try{
                 // create the input and output streams for the new client being connected
                 ObjectOutputStream out = new ObjectOutputStream(this.cliSocket.getOutputStream());
@@ -222,22 +222,12 @@ public class Server implements Runnable{
                         // if what the client sends is the correct thing... then they won
                         if(data.getMsg().equals(actualWord)){
                             sendWinnerNotice(data,out);
-//                            System.out.println("WINNERRRR");
-//                            data.setMsg("YOU WON");
-//                            out.writeObject(data);      // send updated msg to client
-//
-//                            Winner.add("WINNER IS PLAYER "+ data.getName());
-//
-//                            // then send to everyone in the server that there is a winner
-//                            SendingObj losingMsg = new SendingObj();
-//                            losingMsg.setMsg("LOSER");
-//                            // send out msg to losers
-//                            for(CliThread ct: allCliConn){
-//                                if(ct.num != this.num){
-//                                    ct.getCliObjOut().writeObject(losingMsg);
-//                                }
-//                            }
                         }
+                        // if the client requested an update
+                        else if(data.getMsg().equals("update")){
+                            sendUpdate(lettersSoFar);
+                        }
+
                         // else it is not correct so keep trying
                         else{
                             int counter = 0;
@@ -322,7 +312,7 @@ public class Server implements Runnable{
         }
 
         // need to somehow send over the status of the word to all the clients on the server...********************************************
-        public void sendWinnerNotice(SendingObj data,ObjectOutputStream out){
+        public synchronized void sendWinnerNotice(SendingObj data,ObjectOutputStream out){          // made synched...
             try{
                 guessed = true;
                 System.out.println(" WINNERRRR");                                    // MAKE INTO A FUNCTION
@@ -347,6 +337,27 @@ public class Server implements Runnable{
 
         public void sendCurrWord(ArrayList<Character> charArr){         // FINISH!!!!!!!!!
 
+        }
+
+        // if it does not seem to work as is then make the update be only for the client that requested it...
+        public synchronized void sendUpdate(ArrayList<Character> currLetters){                  // made synched...
+            try{
+                // then send to everyone in the server the update on the word status
+                SendingObj update = new SendingObj();
+                update.setMsg("update");
+
+                System.out.println("sending update***************");
+                for(char c: currLetters){
+                    System.out.println(c);
+                }
+                update.setGuessedSoFar(currLetters);
+
+                for(CliThread ct: allCliConn){
+                    ct.getCliObjOut().writeObject(update);
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         }
 
     }
