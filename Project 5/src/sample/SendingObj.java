@@ -1,6 +1,7 @@
 package sample;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class SendingObj implements Serializable {
@@ -16,6 +17,8 @@ public class SendingObj implements Serializable {
 
     private ArrayList<Character> guessedSoFar;      // allows the users to know how much of the word has been guessed
 
+    private ArrayList<String> whatUsersGUessed;         // stores what other users have guessed
+
     // default const
     SendingObj(){
         this.msg = "";
@@ -25,6 +28,8 @@ public class SendingObj implements Serializable {
         this.posOfGuess = new ArrayList<Integer>();
         this.wordLen = -1;
         this.guessedSoFar = new ArrayList<Character>();
+
+        this.whatUsersGUessed = new ArrayList<String>();
     }
 
     SendingObj(SendingObj so2){
@@ -35,6 +40,8 @@ public class SendingObj implements Serializable {
         this.posOfGuess = so2.posOfGuess;
         this.wordLen = so2.wordLen;
         this.guessedSoFar = so2.guessedSoFar;
+
+        this.whatUsersGUessed = so2.whatUsersGUessed;
     }
 
     public void setMsg(String m){ this.msg = m;}
@@ -65,5 +72,15 @@ public class SendingObj implements Serializable {
         }
     }
     public ArrayList<Character> getGuessedSoFar(){ return this.guessedSoFar;}
+
+    //clears and adds in what has been guessed so far
+    public void setWhatUsersGUessed(ArrayList<String> strArr){
+        this.whatUsersGUessed.clear();
+        for(String s: strArr){
+            this.whatUsersGUessed.add(s);
+        }
+    }
+
+    public ArrayList<String> getWhatUsersGuessed(){ return this.whatUsersGUessed;}
 
 }
