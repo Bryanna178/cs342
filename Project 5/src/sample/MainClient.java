@@ -105,6 +105,7 @@ public class MainClient extends Application {
     }
 
     public Scene ClientGUI(Client s) throws IOException {
+        this.guiSendobj.setName(s.getName());        // sets name of the client obj thats being passed around
         GridPane pane = new GridPane();
 
         //buttons to choose to play again or quit
@@ -166,6 +167,7 @@ public class MainClient extends Application {
         pane.add(update,4,1);               // move around...
         pane.add(t2, 0, 2);
         pane.add(list,0,3);
+        gameStatus.setRotate(90.0); //********add to rotate button for hangman to stay straight.
         pane.add(gameStatus,5,3);
         pane.add(t3,0,4);
         pane.add(wordStatus,0,5);
@@ -174,6 +176,8 @@ public class MainClient extends Application {
         playAgain.setOnAction((event) -> {
             //will need to handle the rematch stuff
             //need to call getRandWord() to get a new word for a new game
+            // need to tell server somehow that a client wants to replay?
+            // only start game when there are 4 players in server
         });
 
         quit.setOnAction((event) -> {
@@ -183,7 +187,7 @@ public class MainClient extends Application {
 
         update.setOnAction((event) ->{
             requestUpdate(s);
-            getUpdate(s);
+            getUpdate(s,played);
         });
 
         sendGuess.setOnAction((event) ->{
@@ -195,19 +199,16 @@ public class MainClient extends Application {
                 if(data.getStrikes() <= 12){
                     // not a good guess so set a strike and display picture
                     if(data.getMsg().equals("try again")) {
+                        System.out.println("TRY AGAIN");
                         setHangmanImage(data.getStrikes(), imagesArray);
                     }
 
                     // good guess, get position(s) of guessed letter
                     else if(data.getMsg().equals("good guess")){
-                        // have the position of the char... so display it!
-//                        for(int i: data.getPosOfGuess()){
-//                            System.out.println("pos of letter is " + i);
-//                        }
+                        System.out.println("good guess");
                         wordStatus.clear();
                         wordStatus.setText(data.getGuessedSoFar().toString());
                         data.getPosOfGuess().clear();               // once the positions have been used clear it for the next adds
-
                     }
 
                     // player lost game
@@ -276,7 +277,7 @@ public class MainClient extends Application {
         return v;
     }
 
-    public void makeGuess(String s, ObservableList<String> played, Client c){
+    public synchronized void makeGuess(String s, ObservableList<String> played, Client c){      // made synched**
         try{
             // tell the client what guesses were made was made
             played.add(s);
@@ -285,7 +286,7 @@ public class MainClient extends Application {
             this.guiSendobj.setMsg(s);
             c.getCliObjOut().writeObject(this.guiSendobj);
             c.getCliObjOut().flush();
-            System.out.println("sent " + this.guiSendobj.getMsg());
+            System.out.println("sent " + this.guiSendobj.getMsg() + " with "+ this.guiSendobj.getStrikes() +" strikes********");
 
         }catch(Exception e){
             e.printStackTrace();
@@ -297,7 +298,7 @@ public class MainClient extends Application {
         gameStatus.setGraphic(makePic(picArray.get(strikeNum).getImage(),250));
     }
 
-    public void requestUpdate(Client c){
+    public synchronized void requestUpdate(Client c){               // made synched**
         try{
             this.guiSendobj.setMsg("update");
             c.getCliObjOut().writeObject(this.guiSendobj);
@@ -307,16 +308,21 @@ public class MainClient extends Application {
         }
     }
 
-    public void getUpdate(Client c){
+    public synchronized void getUpdate(Client c, ObservableList<String> played){                   // made synched**
         try{
             SendingObj data = (SendingObj) c.getCliInput().readObject();
-            this.guiSendobj = data;
             System.out.println("got update*********" + data.getMsg());
-//            for(char s: data.getGuessedSoFar()){
-//                System.out.print(s);
-//            }
+            for(char s: data.getGuessedSoFar()){
+                System.out.print(s);
+            }
             wordStatus.clear();
             wordStatus.setText(data.getGuessedSoFar().toString());
+
+            // updates what everyone in the server has played
+            played.clear();
+            for(String s: data.getWhatUsersGuessed()){
+                played.add(s);
+            }
 
         }catch(Exception e){
             e.printStackTrace();

@@ -36,6 +36,8 @@ public class Server implements Runnable{
     private char[] wordInParts;
     private int remainingLetters;
 
+    private ArrayList<String> whatsBeenGuessed;         // stores whats been guessed
+
 
     //constructor
     public Server(int port) throws IOException {
@@ -51,6 +53,8 @@ public class Server implements Runnable{
         this.allCliConn = new ArrayList<>();
         this.totalCli = 0;
         this.wordsLst = new ArrayList<>();
+
+        this.whatsBeenGuessed = new ArrayList<>();
 
         try{
             //read in dictionary.txt file
@@ -75,6 +79,9 @@ public class Server implements Runnable{
         //added
         wordInParts = this.actualWord.toCharArray();
         this.remainingLetters = actualWord.length();
+
+        this.whatsBeenGuessed.add("Total letters in word: "+ this.remainingLetters);
+
         this.lettersSoFar = new ArrayList<Character>();      // char array that is of the length of the word...
         for(int i = 0; i < remainingLetters; i++){
             lettersSoFar.add('_');
@@ -212,24 +219,26 @@ public class Server implements Runnable{
                 // (we need it to pass through the client object over)
                 while(true){
                     //added
-
                     // the sendingObj comes in from a client and the server deals with it here
                     //---------------------------------------------------------------------------------------------- PROJECT 5
                     SendingObj data = (SendingObj) in.readObject();
                     System.out.println("rcvd " + data.getMsg() + " from " + data.getName() + " player number " + this.num);
 
                     if(!guessed){
+                        System.out.println("*********************INSIDE !GUESSED");
+
                         // if what the client sends is the correct thing... then they won
                         if(data.getMsg().equals(actualWord)){
                             sendWinnerNotice(data,out);
                         }
                         // if the client requested an update
                         else if(data.getMsg().equals("update")){
-                            sendUpdate(lettersSoFar);
+                            sendUpdate(lettersSoFar,out);
                         }
 
                         // else it is not correct so keep trying
                         else{
+                            whatsBeenGuessed.add(data.getMsg());
                             int counter = 0;
                             char userGuess = data.getMsg().charAt(0);
                             for(char c: wordInParts){
@@ -267,6 +276,7 @@ public class Server implements Runnable{
                                     data.getGuessedSoFar().add(c);
                                 }
                                 out.writeObject(data);
+                                System.out.println("SENT WORD");
                             }
 
                             // if no letter was guessed correctly
@@ -340,11 +350,12 @@ public class Server implements Runnable{
         }
 
         // if it does not seem to work as is then make the update be only for the client that requested it...
-        public synchronized void sendUpdate(ArrayList<Character> currLetters){                  // made synched...
+        public synchronized void sendUpdate(ArrayList<Character> currLetters, ObjectOutputStream out){                  // made synched...
             try{
                 // then send to everyone in the server the update on the word status
                 SendingObj update = new SendingObj();
                 update.setMsg("update");
+                update.setWhatUsersGUessed(whatsBeenGuessed);
 
                 System.out.println("sending update***************");
                 for(char c: currLetters){
@@ -352,9 +363,8 @@ public class Server implements Runnable{
                 }
                 update.setGuessedSoFar(currLetters);
 
-                for(CliThread ct: allCliConn){
-                    ct.getCliObjOut().writeObject(update);
-                }
+                out.writeObject(update);
+
             }catch(Exception e){
                 e.printStackTrace();
             }
