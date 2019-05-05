@@ -196,7 +196,10 @@ public class MainClient extends Application {
                 SendingObj data = (SendingObj) s.getCliInput().readObject();
                 this.guiSendobj = data;
                 System.out.println("from server on gui " + data.getMsg() + " strikes "+ data.getStrikes());
-                if(data.getStrikes() <= 12){
+                if(data.getMsg().equals("nope")){
+                    played.add("NOT ALL PLAYERS CONNECTED PLEASE WAIT FOR ALL PLAYERS");
+                }
+                else if(data.getStrikes() <= 12){
                     // not a good guess so set a strike and display picture
                     if(data.getMsg().equals("try again")) {
                         System.out.println("TRY AGAIN");
@@ -300,8 +303,10 @@ public class MainClient extends Application {
 
     public synchronized void requestUpdate(Client c){               // made synched**
         try{
-            this.guiSendobj.setMsg("update");
-            c.getCliObjOut().writeObject(this.guiSendobj);
+//            this.guiSendobj.setMsg("update");
+            SendingObj update = new SendingObj();
+            update.setMsg("update");
+            c.getCliObjOut().writeObject(update);
             c.getCliObjOut().flush();
         }catch(Exception e){
             e.printStackTrace();
