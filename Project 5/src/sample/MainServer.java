@@ -130,10 +130,12 @@ public class MainServer extends Application {
             @Override
             public void handle(ActionEvent actionEvent) {
                 if(suspended == false){
+                    System.out.println("suspened");
                     thread.suspend();
                     suspended = true;
                 }
                 else{
+                    System.out.println("resumed");
                     thread.resume();
                     suspended = false;
                 }

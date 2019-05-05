@@ -37,6 +37,7 @@ public class Server implements Runnable{
     private int remainingLetters;
 
     private ArrayList<String> whatsBeenGuessed;         // stores whats been guessed
+    private boolean playersConnected;                   // when all players are connected can start game
 
 
     //constructor
@@ -55,6 +56,7 @@ public class Server implements Runnable{
         this.wordsLst = new ArrayList<>();
 
         this.whatsBeenGuessed = new ArrayList<>();
+        this.playersConnected = false;                  // true when 4 players connected
 
         try{
             //read in dictionary.txt file
@@ -120,6 +122,9 @@ public class Server implements Runnable{
                     }
                 });
 
+                if(totalCli == 2){                      // CHANGE TO 4 WHEN DONE USING 2 FOR TESTING
+                    playersConnected = true;
+                }
                 totalCli++;     // add to the total clients in server
             }
         }
@@ -215,64 +220,70 @@ public class Server implements Runnable{
                 cliObj.setGuessedSoFar(lettersSoFar);
                 out.writeObject(cliObj);
 
+                // if all players in we can start game
+                while(!playersConnected){
+                    SendingObj data = (SendingObj) in.readObject();
+                    data.setMsg("nope");
+                    out.writeObject(data);
+                }
+                System.out.println("OUT OF WHILE LOOP");
                 // ready to enter the infinite loop where the server will be waiting for any client to send something over
                 // (we need it to pass through the client object over)
-                while(true){
+                while (true) {
                     //added
                     // the sendingObj comes in from a client and the server deals with it here
                     //---------------------------------------------------------------------------------------------- PROJECT 5
                     SendingObj data = (SendingObj) in.readObject();
                     System.out.println("rcvd " + data.getMsg() + " from " + data.getName() + " player number " + this.num);
 
-                    if(!guessed){
+                    if (!guessed) {
                         System.out.println("*********************INSIDE !GUESSED");
 
                         // if what the client sends is the correct thing... then they won
-                        if(data.getMsg().equals(actualWord)){
-                            sendWinnerNotice(data,out);
+                        if (data.getMsg().equals(actualWord)) {
+                            sendWinnerNotice(data, out);
                         }
                         // if the client requested an update
-                        else if(data.getMsg().equals("update")){
-                            sendUpdate(lettersSoFar,out);
+                        else if (data.getMsg().equals("update")) {
+                            sendUpdate(lettersSoFar, out);
                         }
 
                         // else it is not correct so keep trying
-                        else{
+                        else {
                             whatsBeenGuessed.add(data.getMsg());
                             int counter = 0;
                             char userGuess = data.getMsg().charAt(0);
-                            for(char c: wordInParts){
-                                System.out.println("char from word... "+c);
-                                if(c == userGuess){
+                            for (char c : wordInParts) {
+                                System.out.println("char from word... " + c);
+                                if (c == userGuess) {
                                     System.out.println("correct letter");
                                     data.setMsg("good guess");
                                     data.addPosOfGuess(counter);
                                     lettersSoFar.remove(counter);        // adds the letter in the spot it belongs
-                                    lettersSoFar.add(counter,c);
+                                    lettersSoFar.add(counter, c);
                                     remainingLetters--;                 // take away the remaining letters
-//                                    out.writeObject(data);
                                 }
                                 counter++;
                             }
 
                             System.out.println("curr");
-                            for(char c: lettersSoFar){
+                            for (char c : lettersSoFar) {
                                 System.out.print(c);
                             }
 
                             // check if the word was solved for
-                            if(remainingLetters == 0){
+                            if (remainingLetters == 0) {
                                 data.getGuessedSoFar().clear();
-                                for(char c: lettersSoFar){
+                                for (char c : lettersSoFar) {
                                     data.getGuessedSoFar().add(c);
                                 }
-                                sendWinnerNotice(data,out);
+                                sendWinnerNotice(data, out);
                             }
 
                             // if positions were found and still no winner send the obj
-                            if(data.getPosOfGuess().size() > 0 && !guessed){
+                            if (data.getPosOfGuess().size() > 0 && !guessed) {
                                 data.getGuessedSoFar().clear();
-                                for(char c: lettersSoFar){
+                                for (char c : lettersSoFar) {
                                     data.getGuessedSoFar().add(c);
                                 }
                                 out.writeObject(data);
@@ -280,7 +291,7 @@ public class Server implements Runnable{
                             }
 
                             // if no letter was guessed correctly
-                            else if(!data.getMsg().equals("good guess")){
+                            else if (!data.getMsg().equals("good guess")) {
                                 System.out.println("try again");
                                 data.setMsg("try again");
 
@@ -291,18 +302,16 @@ public class Server implements Runnable{
                         }
                     }
 
+                    else if(guessed){
+                        // sned them the notification that someone has already won
+                    }
 
 
                     //---------------------------------------------------------------------------------------------     PROJECT 5
 
                     // probably move this up... where the data comes in
                     cliObj = data;      // reset the client object that pertains to this client thread...
-                    System.out.println("new client "+ this.num + " obj "+ cliObj.getStrikes() +" stikes "+ cliObj.getMsg() + " msg, won: "+ cliObj.getWinStatus());
-
-//                    // get what the client sent and send it to all clients on server...           // USE THIS IDEA TO CHECK FOR A WINNER
-//                    for(CliThread ct: allCliConn){
-//                        out.writeObject("get go " + data + " from someone ");
-//                    }
+                    System.out.println("new client " + this.num + " obj " + cliObj.getStrikes() + " stikes " + cliObj.getMsg() + " msg, won: " + cliObj.getWinStatus());
 
 
                     Platform.runLater(new Runnable() {
@@ -318,7 +327,7 @@ public class Server implements Runnable{
             }catch(Exception e){
                 e.printStackTrace();
                 System.out.println("some error inside cli thread");
-            }
+            }   // end of try and catch for client handling
         }
 
         // need to somehow send over the status of the word to all the clients on the server...********************************************
@@ -354,7 +363,7 @@ public class Server implements Runnable{
             try{
                 // then send to everyone in the server the update on the word status
                 SendingObj update = new SendingObj();
-                update.setMsg("update");
+//                update.setMsg("update");
                 update.setWhatUsersGUessed(whatsBeenGuessed);
 
                 System.out.println("sending update***************");
