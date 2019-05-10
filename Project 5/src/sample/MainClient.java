@@ -36,6 +36,7 @@ public class MainClient extends Application {
     private TextField wordStatus = new TextField();
 
     private Button update = new Button("update");
+    private boolean lost = false;
 
     public static void main(String[] args) {
         launch(args);
@@ -89,6 +90,8 @@ public class MainClient extends Application {
                     thread.setDaemon(true);                         //sets current thread as a Daemon thread (else its a user thread)
                     thread.start();
 
+                    threads.add(thread);        //added to terminate the thread when exiting
+
                     secondaryStage.hide();
                     secondaryStage.setScene(ClientGUI(client));
                     secondaryStage.show();
@@ -105,6 +108,7 @@ public class MainClient extends Application {
     }
 
     public Scene ClientGUI(Client s) throws IOException {
+        System.out.println("name of client is "+ s.getName());
         this.guiSendobj.setName(s.getName());        // sets name of the client obj thats being passed around
         GridPane pane = new GridPane();
 
@@ -178,10 +182,14 @@ public class MainClient extends Application {
             //need to call getRandWord() to get a new word for a new game
             // need to tell server somehow that a client wants to replay?
             // only start game when there are 4 players in server
+
+            callForReplay(s,played);
+            sendGuess.setDisable(false);
         });
 
         quit.setOnAction((event) -> {
-            System.exit(-1);        // will need to change this
+            makeGuess("disconnected",played,s);
+            System.exit(0);        // will need to change this
             // and adjust to code... close stuff
         });
 
@@ -223,12 +231,14 @@ public class MainClient extends Application {
                     else if(data.getMsg().equals("YOU WON")){
                         wordStatus.clear();
                         wordStatus.setText(data.getGuessedSoFar().toString());
+                        played.add("YOU WON");          // display winning message
                         System.out.println(data.getMsg());
                     }
                 }
                 else{
                     // done at this point can no longer play...
                     sendGuess.setDisable(true);         // disable sending button till there is a winner
+                    played.add("Lost wait for game to end");
                     System.out.println("LOSER WAIT");
                     // still update the loser players stuff
                 }
@@ -287,9 +297,10 @@ public class MainClient extends Application {
 
             // this allows for the gui sending obj to update and display
             this.guiSendobj.setMsg(s);
+            this.guiSendobj.setName(c.getName());
             c.getCliObjOut().writeObject(this.guiSendobj);
             c.getCliObjOut().flush();
-            System.out.println("sent " + this.guiSendobj.getMsg() + " with "+ this.guiSendobj.getStrikes() +" strikes********");
+            System.out.println(guiSendobj.getName()+ " sent " + this.guiSendobj.getMsg() + " with "+ this.guiSendobj.getStrikes() +" strikes********");
 
         }catch(Exception e){
             e.printStackTrace();
@@ -303,9 +314,9 @@ public class MainClient extends Application {
 
     public synchronized void requestUpdate(Client c){               // made synched**
         try{
-//            this.guiSendobj.setMsg("update");
             SendingObj update = new SendingObj();
             update.setMsg("update");
+            update.setName(c.getName());
             c.getCliObjOut().writeObject(update);
             c.getCliObjOut().flush();
         }catch(Exception e){
@@ -316,15 +327,21 @@ public class MainClient extends Application {
     public synchronized void getUpdate(Client c, ObservableList<String> played){                   // made synched**
         try{
             SendingObj data = (SendingObj) c.getCliInput().readObject();
-            System.out.println("got update*********" + data.getMsg());
             for(char s: data.getGuessedSoFar()){
                 System.out.print(s);
             }
+            played.clear();
             wordStatus.clear();
             wordStatus.setText(data.getGuessedSoFar().toString());
 
+            // if words been solved for
+            if(data.getGame()){
+                System.out.println("WE GOT A WINNER....");
+                played.add("WE HAVE A WINNER. Hit replay or exit");
+                sendGuess.setDisable(true);         // disable button because there has been a winner
+            }
+
             // updates what everyone in the server has played
-            played.clear();
             for(String s: data.getWhatUsersGuessed()){
                 played.add(s);
             }
@@ -332,6 +349,19 @@ public class MainClient extends Application {
         }catch(Exception e){
             e.printStackTrace();
         }
+    }
+
+    public void callForReplay(Client c, ObservableList<String> played){
+        //reset everything for a new game
+        SendingObj newGuiSendObj = new SendingObj();
+        guiSendobj = newGuiSendObj;
+
+        played.clear();
+        wordStatus.clear();
+        setHangmanImage(0,imagesArray);
+
+        // send to server that a new game is wanted
+        makeGuess("replay",played,c);
     }
 
 }

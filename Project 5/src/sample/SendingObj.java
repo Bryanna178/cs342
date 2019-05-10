@@ -33,6 +33,7 @@ public class SendingObj implements Serializable {
     }
 
     SendingObj(SendingObj so2){
+        this.name = so2.name;
         this.msg = so2.msg;
         this.strikes = so2.strikes;
         this.win = so2.win;
