@@ -36,6 +36,7 @@ public class MainClient extends Application {
     private TextField wordStatus = new TextField();
 
     private Button update = new Button("update");
+    private boolean lost = false;
 
     public static void main(String[] args) {
         launch(args);
@@ -237,6 +238,7 @@ public class MainClient extends Application {
                 else{
                     // done at this point can no longer play...
                     sendGuess.setDisable(true);         // disable sending button till there is a winner
+                    played.add("Lost wait for game to end");
                     System.out.println("LOSER WAIT");
                     // still update the loser players stuff
                 }

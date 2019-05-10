@@ -123,7 +123,7 @@ public class Server implements Runnable{
                     }
                 });
 
-                if(totalCli == 2){                      // CHANGE TO 4 WHEN DONE USING 2 FOR TESTING
+                if(totalCli == 4){                      // CHANGE TO 4 WHEN DONE USING 2 FOR TESTING
                     playersConnected = true;
                 }
                 totalCli++;     // add to the total clients in server
@@ -322,8 +322,8 @@ public class Server implements Runnable{
                             System.out.println("replay was called for*****");
                         }
 
-                        // if all call for replay...                                            ********************** cange to 4
-                        if(replayCount == 2){
+                        // if all call for replay...                                            ********************** change to 4
+                        if(replayCount == 4){
                             guessed = false;
                             // generate a new word tp play with...**********************************************************
                             System.out.println("*****************NEW GAME*********************");
